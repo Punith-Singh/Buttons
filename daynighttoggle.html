@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-HN">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enhanced Animated Mode Switch</title>
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  height: 100vh;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #f3f3f3, #dcdcdc);
+  font-family: "Poppins", sans-serif;
+  transition: background 0.8s ease;
+  overflow: hidden;
+}
+
+/* --- Main Button --- */
+.mode-button {
+  position: relative;
+  width: 260px;
+  height: 80px;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  background: linear-gradient(145deg, #ffffff, #e0e0e0);
+  box-shadow: 5px 5px 15px rgba(0,0,0,0.15),
+              -3px -3px 10px rgba(255,255,255,0.8);
+  overflow: hidden;
+  transition: all 0.5s ease;
+  padding: 6px;
+}
+.mode-button:active {
+  transform: scale(0.97);
+  box-shadow: inset 3px 3px 10px rgba(0,0,0,0.15),
+              inset -2px -2px 10px rgba(255,255,255,0.7);
+}
+
+/* --- Track Background --- */
+.track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 45px;
+  overflow: hidden;
+  background: linear-gradient(to bottom, #87CEEB, #B0E0E6);
+  transition: background 0.8s ease-in-out, box-shadow 0.8s ease-in-out;
+}
+
+/* --- Cloud Animations --- */
+@keyframes cloud-drift {
+  0% { transform: translateX(0px); }
+  50% { transform: translateX(10px); }
+  100% { transform: translateX(0px); }
+}
+
+.cloud {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  filter: blur(1px);
+  animation: cloud-drift 9s ease-in-out infinite;
+  opacity: 0.9;
+}
+.cloud-1 { width: 60px; height: 35px; top: 10%; left: 15%; animation-delay: 0s; }
+.cloud-2 { width: 50px; height: 28px; top: 35%; left: 50%; animation-delay: 2s; }
+.cloud-3 { width: 70px; height: 40px; top: 20%; left: 75%; animation-delay: 1s; }
+
+/* --- Stars --- */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+.stars {
+  background-image:
+    radial-gradient(1.5px 1.5px at 15% 10%, #fff, transparent),
+    radial-gradient(1px 1px at 60% 20%, #fff, transparent),
+    radial-gradient(2px 2px at 35% 50%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 75% 30%, #fff, transparent),
+    radial-gradient(1px 1px at 5% 70%, #fff, transparent),
+    radial-gradient(2px 2px at 45% 10%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 80% 60%, #fff, transparent);
+  animation: twinkle 3s ease-in-out infinite alternate;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.8s ease-in-out;
+}
+
+/* --- Switch Handle (Sun/Moon) --- */
+.switch-handle {
+  position: absolute;
+  top: 6px; right: 6px; bottom: 6px;
+  width: 68px; /* Width of the handle */
+  border-radius: 50%;
+  transition: all 0.8s ease-in-out;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Sun Rays */
+.sun-rays {
+  position: absolute;
+  width: 140%;
+  height: 140%;
+  background: conic-gradient(from 0deg, rgba(255,215,0,0.4), transparent 20%);
+  border-radius: 50%;
+  animation: spin 5s linear infinite;
+  opacity: 0.7;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Moon Craters */
+.crater {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 50%;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+  opacity: 0;
+  transition: opacity 0.6s ease-in-out;
+}
+.crater-1 { width: 12px; height: 12px; top: 10px; left: 25px; }
+.crater-2 { width: 18px; height: 18px; top: 25px; left: 10px; }
+.crater-3 { width: 10px; height: 10px; top: 40px; left: 35px; }
+
+/* --- Text --- */
+.mode-text {
+  position: absolute;
+  left: 50%; 
+  top: 50%;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #32465a;
+  transition: color 0.8s ease-in-out; 
+  z-index: 3; 
+  white-space: nowrap; 
+  pointer-events: none; 
+}
+
+/* --- Light Mode --- */
+.mode-button.light .track {
+  background: linear-gradient(to bottom, #87CEEB 0%, #B0E0E6 100%);
+  box-shadow: inset 0 0 15px rgba(135,206,250,0.4);
+}
+.mode-button.light .stars { opacity: 0; }
+.mode-button.light .switch-handle {
+  background: radial-gradient(circle at center, #FFD700, #FFA500);
+  box-shadow: 0 0 15px rgba(255, 200, 0, 0.8);
+  transform: translateX(0); /* Sun at right */
+}
+.mode-button.light .sun-rays { opacity: 1; }
+.mode-button.light .crater { opacity: 0; }
+.mode-button.light .mode-text { color: #32465a; }
+
+/* --- Dark Mode --- */
+.mode-button.dark .track {
+  background: linear-gradient(to bottom, #09091c 0%, #1b1b3a 100%);
+  box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+}
+.mode-button.dark .cloud { opacity: 0; }
+.mode-button.dark .stars { opacity: 1; }
+.mode-button.dark .switch-handle {
+  background: radial-gradient(circle at center, #e0e0e0, #a0a0a0);
+  box-shadow: 0 0 20px rgba(240,240,255,0.7);
+  /* Adjusted translateX: 
+     Button width (260px) - padding (6px*2) - handle width (68px) = 180px
+     So, move left by 180px.
+  */
+  transform: translateX(-180px); /* Moon at left */
+}
+.mode-button.dark .sun-rays { opacity: 0; }
+.mode-button.dark .crater { opacity: 1; }
+.mode-button.dark .mode-text {
+  color: #f3f3f3;
+}
+
+/* Transition Text Fade Effect */
+.fade {
+  opacity: 0;
+  transform: translate(-50%, -50%) translateY(-10px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.fade.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) translateY(0);
+}
+</style>
+</head>
+<body>
+
+<button class="mode-button light">
+  <div class="track">
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="cloud cloud-3"></div>
+    <div class="stars"></div>
+  </div>
+  <span class="mode-text fade show">☀️ Light Mode</span>
+  <div class="switch-handle">
+    <div class="sun-rays"></div>
+    <div class="crater crater-1"></div>
+    <div class="crater crater-2"></div>
+    <div class="crater crater-3"></div>
+  </div>
+</button>
+
+<script>
+const modeButton = document.querySelector('.mode-button');
+const textElement = document.querySelector('.mode-text');
+let isLightMode = true;
+
+modeButton.addEventListener('click', () => {
+  textElement.classList.remove('show');
+  
+  setTimeout(() => {
+    if (isLightMode) {
+      modeButton.classList.remove('light');
+      modeButton.classList.add('dark');
+      textElement.textContent = '🌙 Dark Mode';
+      document.body.style.background = 'linear-gradient(135deg, #0c0c1a, #1a1a3a)';
+    } else {
+      modeButton.classList.remove('dark');
+      modeButton.classList.add('light');
+      textElement.textContent = '☀️ Light Mode';
+      document.body.style.background = 'linear-gradient(135deg, #f3f3f3, #dcdcdc)';
+    }
+    isLightMode = !isLightMode;
+    textElement.classList.add('show');
+  }, 300);
+});
+</script>
+
+</body>
+</html>
+
