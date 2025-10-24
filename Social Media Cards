@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Card Hover</title>
+    <!-- Font Awesome CDN for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <style>
+        /* Google Font import */
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
+        *,
+        *::after,
+        *::before {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        }
+        body {
+        font-family: 'Poppins', sans-serif; /* Added fallback font */
+        min-height: 100vh;
+        background-color: #060606;
+        display: grid;
+        place-items: center;
+        color: white;
+        overscroll-behavior: none; /* Prevents scroll bleed-through */
+        }
+        #cards {
+        width: 90%; /* Use % for better responsiveness */
+        max-width: 1000px; /* Add max-width */
+        padding-inline: 20px;
+        display: flex;
+        flex-wrap: wrap; /* Allows cards to wrap on smaller screens */
+        justify-content: center; /* Center cards */
+        gap: 30px;
+        perspective: 1000px; /* Add perspective for 3D effect */
+        }
+        .card {
+        min-width: 200px;
+        height: 350px;
+        flex: 1 1 250px; /* Flexible basis for responsiveness */
+        /* Use a faint version of the card color for the background */
+        background: hsl(var(--color) / 0.1);
+        border-radius: 12px;
+        position: relative;
+        /* Updated transition for transform and box-shadow */
+        transition: transform 0.1s ease, box-shadow 0.2s ease;
+        will-change: transform, box-shadow; /* Optimize for animation */
+        }
+        
+        /* This is the new hover effect */
+        .card:hover {
+            /* Brighten the background "border" */
+            background: hsl(var(--color) / 0.3);
+            /* Add a glow using box-shadow */
+            box-shadow: 0 10px 30px -5px hsl(var(--color) / 0.5);
+        }
+
+        /* Removed the #cards:hover > .card rule */
+        
+        .card_content {
+        position: absolute;
+        inset: 1px; /* Creates the border effect */
+        background-color: #131315;
+        border-radius: inherit;
+        flex-direction: column;
+        }
+        /* Card-specific color variables */
+        .card:nth-child(1) {
+        --color: 350 82% 61%; /* Instagram Pink - (Original: 348 80% 60%) */
+        }
+        .card:nth-child(2) {
+        --color: 210 10% 95%; /* Github Light Gray - (Original: 0 0% 100%) */
+        }
+        .card:nth-child(3) {
+        --color: 210 80% 45%; /* LinkedIn Blue - (Original: 220 100% 35%) */
+        }
+
+        /* Removed all .card::before and #cards:hover > .card::before rules */
+        
+        a {
+        all: unset;
+        cursor: pointer;
+        }
+        .card_content {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 18px;
+        align-items: center;
+        padding: 20px; /* Add some padding */
+        }
+        .card_content > i {
+        font-size: 5rem;
+        color: rgba(255, 255, 255, 0.5);
+        transition: color 0.3s ease; /* Added transition for icon color */
+        }
+        /* Make icon brighter on individual card hover */
+        .card:hover .card_content > i {
+            color: rgba(255, 255, 255, 0.85);
+        }
+        .card_content > h2 {
+            font-size: 2rem; /* Style heading */
+        }
+        .card_content > p {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 1.1rem; /* Style paragraph */
+        }
+        .card_content > a {
+        width: 90%;
+        padding-block: 0.8rem;
+        background-color: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        z-index: 10; /* Ensures link is clickable above aura */
+        transition: background-color 0.3s ease, border-color 0.3s ease; /* Added transition */
+        }
+        .card_content > a:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- HTML Content -->
+    <div id="cards">
+        <div class="card">
+            <div class="card_content">
+                <i class="fa-brands fa-instagram"></i>
+                <h2>Instagram</h2>
+                <p>Followers : <span>625k</span></p>
+                <a href="#">
+                    <i class="fa-solid fa-link"></i>
+                    <span>Follow me</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card_content">
+                <i class="fa-brands fa-github"></i>
+                <h2>Github</h2>
+                <p>Followers : <span>150k</span></p>
+                <a href="#">
+                    <i class="fa-solid fa-link"></i>
+                    <span>Follow me</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card_content">
+                <i class="fa-brands fa-linkedin"></i>
+                <h2>Linkedin</h2>
+                <p>Connection : <span>100k</span></p>
+                <a href="#">
+                    <i class="fa-solid fa-link"></i>
+                    <span>Connect</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Content -->
+    <script>
+        // Get all elements with the class "card" and store them in an array
+        const cards = Array.from(document.querySelectorAll(".card"));
+        
+        // Define the maximum rotation (in degrees)
+        const maxRotation = 15;
+
+        // Loop through each card and add event listeners
+        cards.forEach(card => {
+            
+            // Mouse move event for the 3D tilt
+            card.addEventListener("mousemove", (e) => {
+                const rect = card.getBoundingClientRect();
+                
+                // Calculate mouse position relative to the card's center
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+
+                // Map mouse position to rotation (inverted Y for natural tilt)
+                // The further from the center, the more it tilts
+                const rotateY = (x / (rect.width / 2)) * maxRotation;
+                const rotateX = -(y / (rect.height / 2)) * maxRotation;
+
+                // Apply the 3D transform with scale
+                // The perspective is set on the parent (#cards)
+                card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+            });
+
+            // Mouse leave event to reset the card
+            card.addEventListener("mouseleave", () => {
+                // Reset transform to default state
+                card.style.transform = `rotateX(0deg) rotateY(0deg) scale(1)`;
+            });
+        });
+    </script>
+</body>
+</html>
+
