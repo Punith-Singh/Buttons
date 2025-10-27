@@ -55,6 +55,7 @@
     gap: 10px;
     transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.4s ease;
     white-space: nowrap;
+    z-index: 1; /* Set z-index to slide *behind* the door */
   }
 
   .initial-content {
@@ -97,20 +98,43 @@
     stroke-width: 3;
   }
   
-  /* This is the user's "door", renamed to "loading-bar" */
+  /* This is the "door", styled to look like an inset slot */
   .loading-bar {
     position: absolute;
-    right: 20px;
+    right: 20px; /* Position from right */
     top: 50%;
+    
+    /* Make it look like an inset "door" or "slot" */
+    width: 32px; /* Wide enough for the 28px icon */
+    height: 40px; /* Taller than the icon */
+    
+    /* Brown door color with a subtle radial gradient */
+    background: radial-gradient(circle at top left, #6b4c30, #4a3321);
+    border-radius: 8px; /* Slightly increased border-radius */
+    
+    /* Inset shadow to give depth + original glow */
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 15px rgba(139, 69, 19, 0.6); 
+
+    /* Animation properties */
     transform: translateY(-50%) scaleX(0); /* Start hidden */
-    transform-origin: right center;
-    width: 8px;
-    height: 40px;
-    background: linear-gradient(180deg, #00bfff, #0077ff);
-    border-radius: 3px;
-    box-shadow: 0 0 15px #0077ffcc;
+    transform-origin: right center; /* Grow from the right */
     opacity: 0;
     transition: all 0.4s ease;
+    z-index: 2; /* Position *above* the icon content */
+  }
+
+  /* Door Handle */
+  .loading-bar::after {
+    content: '';
+    position: absolute;
+    left: 5px; /* Position on the left side of the door */
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px; /* Small handle width */
+    height: 12px; /* Small handle height */
+    background: linear-gradient(to bottom, #cccccc, #888888); /* Silver gradient */
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
   }
 
 
@@ -122,16 +146,20 @@
     opacity: 0;
   }
   
-  /* Cart icon slides right into the bar */
+  /* Cart icon slides right into the door */
   .cart-button.loading .initial-cart-icon {
-    transform: translateX(100px); /* Adjust this value as needed */
+    /* This value moves the icon's center to the "door's" center */
+    transform: translateX(124px); 
     opacity: 0;
-    transition-delay: 0.1s;
+    /* Delay the fade out so it's seen sliding *behind* the door */
+    transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.4s ease 0.15s;
   }
 
   .cart-button.loading .loading-bar {
     opacity: 1;
     transform: translateY(-50%) scaleX(1); /* Bar appears */
+    /* Delay its appearance slightly to match text fade */
+    transition-delay: 0.1s; 
   }
   
   /* --- THIS IS THE FIX --- */
@@ -200,8 +228,7 @@
 
   <button class="cart-button">
     
-    <!-- Initial State Content -->
-    <div class="content initial-content">
+    <!-- Initial State Content --><div class="content initial-content">
       <svg class="cart-icon initial-cart-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
         <circle cx="9" cy="21" r="1"></circle>
         <circle cx="20" cy="21" r="1"></circle>
@@ -210,11 +237,9 @@
       <span class="initial-cart-text">Add to Cart</span>
     </div>
     
-    <!-- Loading Bar (the user's "door") -->
-    <div class="loading-bar"></div>
+    <!-- Loading Bar (the "door") --><div class="loading-bar"></div>
 
-    <!-- Complete State Content -->
-    <div class="content complete-content">
+    <!-- Complete State Content --><div class="content complete-content">
       <svg class="checkmark-icon" viewBox="0 0 24 24">
         <path d="M4 12l6 6L20 6"></path>
       </svg>
