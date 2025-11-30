@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warp Speed Download</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: #030305;
+            overflow: hidden;
+            transition: background-color 0.5s;
+        }
+
+        .tech-font {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* The Button Container */
+        .btn-container {
+            position: relative;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 50;
+        }
+
+        /* The Main Button */
+        .download-btn {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            box-shadow: 0 0 25px rgba(37, 99, 235, 0.4), inset 0 0 0 1px rgba(255,255,255,0.15);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .download-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: 0.6s;
+        }
+
+        .download-btn:hover::before {
+            left: 100%;
+        }
+
+        .download-btn:hover {
+            box-shadow: 0 0 40px rgba(124, 58, 237, 0.6);
+            transform: translateY(-2px);
+            letter-spacing: 2px;
+        }
+
+        /* --- Morphing States --- */
+        
+        /* 1. During Morph (Transition) */
+        .btn-container.morphing .download-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #000; /* Deep black center */
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Hide text immediately when morphing starts to prevent clipping */
+        .btn-container.morphing .text-content {
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.2s, transform 0.2s;
+            pointer-events: none;
+        }
+
+        /* 2. The Orb (Event Horizon) */
+        .loader-orb {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            /* Complex gradient for depth */
+            background: radial-gradient(circle, transparent 30%, #3b82f6 60%, transparent 70%);
+            opacity: 0;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+            box-shadow: 0 0 0px #3b82f6; 
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .btn-container.loading .loader-orb {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.2);
+            animation: pulse-orb 2s infinite;
+        }
+
+        @keyframes pulse-orb {
+            0% { box-shadow: 0 0 20px #3b82f6; }
+            50% { box-shadow: 0 0 50px #8b5cf6; }
+            100% { box-shadow: 0 0 20px #3b82f6; }
+        }
+
+        /* 3. Success State */
+        .btn-container.success .download-btn {
+            width: 260px;
+            height: 60px;
+            border-radius: 8px;
+            background: #059669; /* Emerald 600 */
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.6);
+            border: 1px solid #34d399;
+        }
+
+        /* --- Shake Animation --- */
+        @keyframes micro-shake {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-1px, 1px); }
+            75% { transform: translate(1px, -1px); }
+        }
+        
+        @keyframes aggressive-shake {
+            0% { transform: translate(2px, 2px) rotate(0deg); }
+            20% { transform: translate(-2px, 0px) rotate(-1deg); }
+            40% { transform: translate(2px, -2px) rotate(1deg); }
+            60% { transform: translate(-2px, 2px) rotate(0deg); }
+            80% { transform: translate(2px, -2px) rotate(-1deg); }
+            100% { transform: translate(0px, 0px) rotate(0deg); }
+        }
+
+        .shaking {
+            animation: aggressive-shake 0.08s infinite; 
+        }
+
+        /* --- Progress Text (Centered in Orb) --- */
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 700;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 60; /* Above orb, below particles if needed */
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            letter-spacing: -1px;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .progress-text.visible {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .progress-text small {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-left: 2px;
+        }
+
+        /* --- Background & Canvas --- */
+        .bg-grid {
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            width: 200%;
+            height: 200%;
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            transform: perspective(1000px) rotateX(15deg) translateY(0);
+            mask-image: radial-gradient(circle at center, black 0%, transparent 70%);
+            animation: grid-fly 20s linear infinite;
+        }
+
+        @keyframes grid-fly {
+            0% { transform: perspective(1000px) rotateX(15deg) translateY(0); }
+            100% { transform: perspective(1000px) rotateX(15deg) translateY(60px); }
+        }
+
+        .screen-shake {
+            animation: aggressive-shake 0.3s ease-out; 
+        }
+
+        /* --- Status Bar --- */
+        .status-line {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            color: #64748b;
+            font-family: 'Orbitron', monospace;
+            letter-spacing: 1px;
+            margin-top: 1.5rem;
+            height: 20px;
+        }
+        
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background-color: #64748b;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(100, 116, 139, 0.5);
+            transition: all 0.3s;
+        }
+        
+        .status-active .status-dot {
+            background-color: #10b981;
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        /* --- Splash Screen Animations --- */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+        
+        /* New Slam Effect */
+        @keyframes slam {
+            0% { transform: scale(3); opacity: 0; }
+            50% { opacity: 1; }
+            80% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .slam-text {
+            opacity: 0; /* hidden by default */
+        }
+        
+        .slam-active .slam-text {
+            animation: slam 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            animation-delay: 0.3s; /* Wait for white flash to start fading */
+        }
+
+    </style>
+</head>
+<body id="mainBody" class="h-screen w-full flex flex-col items-center justify-center relative overflow-hidden text-gray-200">
+
+    <!-- Background Elements -->
+    <div class="bg-grid pointer-events-none" id="grid"></div>
+    <canvas id="particleCanvas" class="absolute inset-0 w-full h-full pointer-events-none z-40"></canvas>
+
+    <!-- Flash Overlay (White Flash) -->
+    <div id="flashOverlay" class="fixed inset-0 bg-white z-[100] pointer-events-none opacity-0 transition-opacity duration-[800ms] ease-out mix-blend-overlay"></div>
+
+    <!-- Success Splash Screen (Dark Overlay) -->
+    <div id="splashScreen" class="fixed inset-0 z-[90] flex flex-col items-center justify-center bg-[#030305]/90 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-500">
+        <div class="relative animate-float slam-text">
+            <!-- Glow behind text -->
+            <div class="absolute inset-0 bg-green-500 blur-3xl opacity-20 animate-pulse"></div>
+            
+            <h1 class="relative text-5xl md:text-8xl font-black text-white tracking-tighter mb-2 tech-font text-center leading-tight" 
+                style="text-shadow: 0 0 30px rgba(74, 222, 128, 0.5); -webkit-text-stroke: 1px rgba(255,255,255,0.1);">
+                SYSTEM<br>UNLOCKED
+            </h1>
+        </div>
+        
+        <div class="flex items-center gap-3 mt-6 mb-12 slam-text" style="animation-delay: 0.5s;">
+            <div class="h-[1px] w-12 bg-green-500/50"></div>
+            <p class="text-green-400 font-mono text-lg md:text-xl tracking-[0.3em] uppercase">Access Granted</p>
+            <div class="h-[1px] w-12 bg-green-500/50"></div>
+        </div>
+        
+        <button id="resetBtn" class="group relative px-8 py-3 bg-transparent overflow-hidden rounded transition-all slam-text" style="animation-delay: 0.7s;">
+            <div class="absolute inset-0 w-0 bg-white/10 transition-all duration-[250ms] ease-out group-hover:w-full"></div>
+            <div class="absolute inset-0 border border-white/20 rounded"></div>
+            <span class="relative text-white/70 group-hover:text-white tracking-widest text-sm font-mono uppercase transition-colors">
+                Initialize New Sequence
+            </span>
+        </button>
+    </div>
+
+    <!-- Main Card -->
+    <div id="mainCard" class="relative z-50 p-10 bg-[#0a0a0c]/80 backdrop-blur-xl border border-white/5 rounded-3xl shadow-2xl flex flex-col items-center max-w-sm w-full ring-1 ring-white/5 transition-transform duration-100">
+        
+        <!-- Header -->
+        <div class="text-center mb-8 space-y-1">
+            <h2 class="text-2xl font-bold tech-font tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">DATA SYNC</h2>
+            <div class="h-[1px] w-24 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent mx-auto"></div>
+        </div>
+
+        <!-- The Interactive Button Container -->
+        <div id="btnContainer" class="btn-container w-[260px] h-[64px] flex items-center justify-center relative">
+            
+            <!-- The Orb (Visual only) -->
+            <div class="loader-orb" id="orb"></div>
+
+            <!-- The Button Itself -->
+            <button id="downloadBtn" class="download-btn w-full h-full rounded-lg flex items-center justify-center gap-3 text-white font-bold tracking-wider cursor-pointer group uppercase text-sm z-20">
+                
+                <!-- Initial Content -->
+                <div class="text-content flex items-center gap-3 transition-all duration-300 group-hover:tracking-[0.15em] whitespace-nowrap">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    <span>INITIALIZE</span>
+                </div>
+
+                <!-- Success Content -->
+                <div class="success-content hidden flex items-center gap-2 animate-[fadeIn_0.5s_ease-out]">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span>ACCESS GRANTED</span>
+                </div>
+            </button>
+
+            <!-- Progress Percentage -->
+            <div id="progressText" class="progress-text tech-font">0<small>%</small></div>
+        </div>
+
+        <!-- Clean Status Footer -->
+        <div class="status-line" id="statusLine">
+            <div class="status-dot"></div>
+            <span id="statusText">WAITING FOR INPUT</span>
+        </div>
+
+    </div>
+
+    <script>
+        // DOM Elements
+        const body = document.getElementById('mainBody');
+        const card = document.getElementById('mainCard');
+        const btnContainer = document.getElementById('btnContainer');
+        const btn = document.getElementById('downloadBtn');
+        const textContent = btn.querySelector('.text-content');
+        const successContent = btn.querySelector('.success-content');
+        const progressText = document.getElementById('progressText');
+        const orb = document.getElementById('orb');
+        const statusText = document.getElementById('statusText');
+        const statusLine = document.getElementById('statusLine');
+        const canvas = document.getElementById('particleCanvas');
+        const resetBtn = document.getElementById('resetBtn');
+        const flashOverlay = document.getElementById('flashOverlay');
+        const splashScreen = document.getElementById('splashScreen');
+        const ctx = canvas.getContext('2d');
+
+        // State
+        let isDownloading = false;
+        let particles = [];
+        let shockwaves = [];
+        let animationId;
+        let progress = 0;
+        let width, height;
+        let shakeIntensity = 0;
+
+        // Resize
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function getBtnCenter() {
+            const rect = btnContainer.getBoundingClientRect();
+            return {
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2
+            };
+        }
+
+        // --- Visual Classes ---
+
+        class Shockwave {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.radius = 20;
+                this.maxRadius = Math.max(width, height) * 0.8;
+                this.color = color;
+                this.opacity = 0.8;
+                this.width = 4;
+                this.speed = 25;
+            }
+
+            update() {
+                this.radius += this.speed;
+                this.opacity -= 0.03;
+                this.width *= 0.95;
+                this.speed *= 0.92;
+            }
+
+            draw() {
+                if(this.opacity <= 0) return;
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = this.color.replace(')', `, ${this.opacity})`).replace('rgb', 'rgba');
+                ctx.lineWidth = this.width;
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        class Particle {
+            constructor(type = 'in') {
+                this.reset(type);
+            }
+
+            reset(type) {
+                const center = getBtnCenter();
+                this.type = type; 
+                
+                if (type === 'in') {
+                    // Accretion Disk Physics
+                    this.angle = Math.random() * Math.PI * 2;
+                    this.dist = Math.random() * 300 + 100; 
+                    this.x = center.x + Math.cos(this.angle) * this.dist;
+                    this.y = center.y + Math.sin(this.angle) * this.dist;
+                    this.tangentSpeed = 0.05 + Math.random() * 0.05;
+                    this.inwardSpeed = 2 + Math.random() * 4;
+                    this.size = Math.random() * 2 + 1;
+                    
+                    const hues = [210, 260, 280]; 
+                    const hue = hues[Math.floor(Math.random() * hues.length)];
+                    this.color = `hsl(${hue}, 80%, 60%)`;
+                } else {
+                    // Explosion
+                    this.x = center.x;
+                    this.y = center.y;
+                    const a = Math.random() * Math.PI * 2;
+                    const v = Math.random() * 20 + 5;
+                    this.vx = Math.cos(a) * v;
+                    this.vy = Math.sin(a) * v;
+                    this.life = 1;
+                    this.decay = Math.random() * 0.03 + 0.01;
+                    this.color = '#fff';
+                    this.size = Math.random() * 3 + 1;
+                }
+            }
+
+            update(center, progressRatio) {
+                if (this.type === 'in') {
+                    // Spiral logic
+                    // At 95%+, accelerate EVERYTHING into the singularity
+                    let suctionMultiplier = 1;
+                    if(progressRatio > 0.95) suctionMultiplier = 4;
+
+                    this.angle += this.tangentSpeed * (1 + progressRatio * 5) * suctionMultiplier; 
+                    this.dist -= this.inwardSpeed * (1 + progressRatio * 3) * suctionMultiplier; 
+
+                    this.x = center.x + Math.cos(this.angle) * this.dist;
+                    this.y = center.y + Math.sin(this.angle) * this.dist;
+
+                    if (progressRatio > 0.7) {
+                        this.color = `hsl(${280 + Math.random()*60}, 100%, 70%)`; 
+                    }
+
+                    if (this.dist < 15) {
+                        this.reset('in');
+                    }
+                } else {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vx *= 0.9;
+                    this.vy *= 0.9;
+                    this.life -= this.decay;
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.life !== undefined ? this.life : 1;
+                
+                if(this.type === 'in') {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Simple motion blur
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
+                    const prevX = this.x - Math.cos(this.angle + Math.PI/2) * 5;
+                    const prevY = this.y - Math.sin(this.angle + Math.PI/2) * 5;
+                    ctx.strokeStyle = this.color;
+                    ctx.lineWidth = this.size / 2;
+                    ctx.stroke();
+
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        // --- Controller ---
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            const center = getBtnCenter();
+            const ratio = progress / 100;
+
+            // Particles
+            if(isDownloading && progress < 100) {
+                particles.forEach(p => {
+                    p.update(center, ratio);
+                    p.draw();
+                });
+                
+                if(particles.length < 50 + (progress * 1.5)) {
+                    particles.push(new Particle('in'));
+                }
+            } else if (!isDownloading) {
+                // Clear old particles gracefully
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    if (p.life !== undefined && p.life <= 0) {
+                        particles.splice(i, 1);
+                    } else {
+                        // Pass safe center for explosion particles
+                        p.update(center, 0); 
+                        p.draw();
+                    }
+                }
+            }
+
+            // Shockwaves
+            shockwaves.forEach((s, i) => {
+                if(s.opacity <= 0) shockwaves.splice(i, 1);
+                else {
+                    s.update();
+                    s.draw();
+                }
+            });
+
+            // Card Shake
+            if(shakeIntensity > 0) {
+                const x = (Math.random() - 0.5) * shakeIntensity;
+                const y = (Math.random() - 0.5) * shakeIntensity;
+                card.style.transform = `translate(${x}px, ${y}px)`;
+                shakeIntensity *= 0.9; 
+                if(shakeIntensity < 0.5) shakeIntensity = 0;
+            } else {
+                card.style.transform = 'translate(0,0)';
+            }
+
+            requestAnimationFrame(animate);
+        }
+        
+        requestAnimationFrame(animate); 
+
+        // --- Interaction ---
+
+        btn.addEventListener('click', () => {
+            if(isDownloading) return;
+            if(btnContainer.classList.contains('success')) {
+                // Do nothing here, reset is handled by splash screen button
+                return;
+            }
+            start();
+        });
+
+        resetBtn.addEventListener('click', reset);
+
+        function start() {
+            isDownloading = true;
+            progress = 0;
+            particles = [];
+            
+            btnContainer.classList.add('morphing', 'loading');
+            statusLine.classList.add('status-active');
+            statusText.innerText = "ESTABLISHING SECURE CONNECTION...";
+            statusText.style.color = "#3b82f6";
+            
+            setTimeout(() => {
+                progressText.classList.add('visible');
+            }, 300);
+
+            const interval = setInterval(() => {
+                // Non-linear progress
+                let speed = 0.5;
+                if(progress > 20) speed = 1.0;
+                if(progress > 60) speed = 1.5;
+                if(progress > 85) speed = 0.2; 
+                if(progress > 95) speed = 2.0; 
+
+                progress += speed + Math.random();
+                
+                if(progress > 100) progress = 100;
+
+                progressText.innerHTML = Math.floor(progress) + '<small>%</small>';
+                
+                if(progress > 30 && progress < 60) {
+                    statusText.innerText = "DOWNLOADING PACKETS...";
+                } else if(progress > 80) {
+                    statusText.innerText = "DECRYPTING CORE...";
+                    statusText.style.color = "#a855f7";
+                    shakeIntensity = 2;
+                    btnContainer.classList.add('shaking');
+                }
+                
+                // Final visual surge just before completion
+                if(progress > 98) {
+                    shakeIntensity = 5; 
+                }
+
+                if(progress >= 100) {
+                    clearInterval(interval);
+                    complete();
+                }
+
+            }, 50);
+        }
+
+        function complete() {
+            // 1. BLINDING FLASH (White Out)
+            // Instant opacity to hide the UI swap
+            flashOverlay.style.transition = 'opacity 50ms ease-out';
+            flashOverlay.style.opacity = '1';
+
+            // Wait a tiny fraction for flash to cover screen, then swap UI and Explode
+            setTimeout(() => {
+                isDownloading = false;
+                particles = []; 
+
+                // UI Swap (Happens behind the white curtain)
+                btnContainer.classList.remove('morphing', 'loading', 'shaking');
+                btnContainer.classList.add('success');
+                progressText.classList.remove('visible');
+                
+                textContent.classList.add('hidden');
+                successContent.classList.remove('hidden');
+                
+                statusText.innerText = "SYSTEM SYNCHRONIZED";
+                statusText.style.color = "#10b981";
+                
+                // Massive Explosion
+                for(let i=0; i<150; i++) particles.push(new Particle('out'));
+                shockwaves.push(new Shockwave(getBtnCenter().x, getBtnCenter().y, 'rgb(255,255,255)'));
+                
+                // Screen Shake on impact
+                body.classList.add('screen-shake');
+                setTimeout(() => body.classList.remove('screen-shake'), 300);
+
+                // Reveal Splash Screen
+                splashScreen.classList.remove('opacity-0', 'pointer-events-none');
+                splashScreen.classList.add('slam-active'); // Triggers the text slam animation
+
+                // Fade out flash slowly
+                flashOverlay.style.transition = 'opacity 1s ease-out';
+                flashOverlay.style.opacity = '0';
+
+            }, 100);
+        }
+
+        function reset() {
+            // Hide Splash
+            splashScreen.classList.add('opacity-0', 'pointer-events-none');
+            splashScreen.classList.remove('slam-active');
+
+            btnContainer.classList.remove('success');
+            successContent.classList.add('hidden');
+            textContent.classList.remove('hidden');
+            
+            statusLine.classList.remove('status-active');
+            statusText.innerText = "WAITING FOR INPUT";
+            statusText.style.color = "#64748b";
+            progressText.innerHTML = '0<small>%</small>';
+        }
+
+    </script>
+</body>
+</html>
