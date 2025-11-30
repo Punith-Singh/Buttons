@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Breach Alert</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background-color: #020000;
+            overflow: hidden;
+            color: #ef4444;
+        }
+
+        .tech-font {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* --- Glitch Effects --- */
+        @keyframes glitch-skew {
+            0% { transform: skew(0deg); }
+            20% { transform: skew(-2deg); }
+            40% { transform: skew(2deg); }
+            60% { transform: skew(-1deg); }
+            80% { transform: skew(1deg); }
+            100% { transform: skew(0deg); }
+        }
+
+        .glitch-active {
+            animation: glitch-skew 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+            color: #ff0000;
+            text-shadow: 2px 0 #00ffff, -2px 0 #ff00c1;
+        }
+
+        /* The Button Container */
+        .btn-container {
+            position: relative;
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 50;
+        }
+
+        /* The Main Button (Red Theme) */
+        .download-btn {
+            background: linear-gradient(135deg, #7f1d1d, #ef4444);
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.3), inset 0 0 0 1px rgba(255,100,100,0.2);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #ef4444;
+        }
+
+        .download-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: 0.5s;
+        }
+
+        .download-btn:hover::before {
+            left: 100%;
+        }
+
+        .download-btn:hover {
+            box-shadow: 0 0 50px rgba(220, 38, 38, 0.8);
+            transform: translateY(-2px);
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, #991b1b, #f87171);
+        }
+
+        /* --- Morphing States --- */
+        
+        /* State 1: Circle Loader */
+        .btn-container.morphing .download-btn {
+            width: 100px; /* Larger */
+            height: 100px; /* Larger */
+            border-radius: 50%;
+            background: #000; 
+            box-shadow: 0 0 40px rgba(239, 68, 68, 0.8);
+            border: 3px solid rgba(239, 68, 68, 0.9);
+        }
+
+        .btn-container.morphing .text-content {
+            opacity: 0;
+            transform: scale(0.5);
+            transition: opacity 0.2s, transform 0.2s;
+            pointer-events: none;
+        }
+
+        /* The Orb (Red Event Horizon) */
+        .loader-orb {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: radial-gradient(circle, transparent 20%, #ef4444 60%, transparent 80%);
+            opacity: 0;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+            box-shadow: 0 0 0px #ef4444; 
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .btn-container.loading .loader-orb {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.3);
+            animation: pulse-orb 0.8s infinite;
+        }
+
+        @keyframes pulse-orb {
+            0% { box-shadow: 0 0 30px #ef4444; }
+            50% { box-shadow: 0 0 80px #b91c1c; }
+            100% { box-shadow: 0 0 30px #ef4444; }
+        }
+
+        /* Success State */
+        .btn-container.success .download-btn {
+            width: 320px;
+            height: 80px;
+            border-radius: 8px;
+            background: #450a0a; 
+            box-shadow: 0 0 50px rgba(220, 38, 38, 1);
+            border: 2px solid #ff0000;
+        }
+
+        /* --- Shake Animation --- */
+        @keyframes aggressive-shake {
+            0% { transform: translate(2px, 2px) rotate(0deg); }
+            20% { transform: translate(-4px, 0px) rotate(-2deg); }
+            40% { transform: translate(4px, -2px) rotate(2deg); }
+            60% { transform: translate(-4px, 2px) rotate(0deg); }
+            80% { transform: translate(4px, -2px) rotate(-2deg); }
+            100% { transform: translate(0px, 0px) rotate(0deg); }
+        }
+
+        .shaking {
+            animation: aggressive-shake 0.08s infinite; 
+        }
+
+        /* --- Progress Text --- */
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            color: #fff;
+            font-size: 1.8rem;
+            font-weight: 900;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 60;
+            text-shadow: 0 0 15px #ff0000;
+            letter-spacing: -1px;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .progress-text.visible {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* --- Background --- */
+        .bg-grid {
+            background-image: 
+                linear-gradient(rgba(220, 38, 38, 0.03) 2px, transparent 2px),
+                linear-gradient(90deg, rgba(220, 38, 38, 0.03) 2px, transparent 2px);
+            background-size: 60px 60px;
+            width: 200%;
+            height: 200%;
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            transform: perspective(1000px) rotateX(15deg);
+            mask-image: radial-gradient(circle at center, black 0%, transparent 80%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* --- FIREWALL STYLES --- */
+        .firewall-container {
+            display: flex;
+            gap: 6px;
+            width: 100%;
+            height: 16px;
+        }
+
+        .firewall-node {
+            flex: 1;
+            height: 100%;
+            background-color: #059669; /* Green */
+            border: 1px solid #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+            transform: skew(-15deg);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .firewall-node.breached {
+            background-color: #2a0a0a; /* Dark Red */
+            border-color: #7f1d1d;
+            box-shadow: 0 0 0 transparent;
+            transform: skew(-15deg) scale(0.95);
+            opacity: 0.5;
+        }
+        
+        .firewall-node.active-attack {
+            background-color: #ef4444;
+            box-shadow: 0 0 20px #ef4444;
+            animation: panic-flash 0.1s infinite;
+            z-index: 10;
+        }
+
+        @keyframes panic-flash {
+            0% { background-color: #fff; border-color: #fff; }
+            50% { background-color: #ef4444; border-color: #ef4444; }
+            100% { background-color: #fff; border-color: #fff; }
+        }
+
+        /* --- Splash Screen --- */
+        #splashScreen {
+            background: #000;
+        }
+        
+        .slam-text { opacity: 0; }
+        .slam-active .slam-text { animation: slam-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        @keyframes slam-in {
+            0% { transform: scale(5); opacity: 0; }
+            60% { transform: scale(0.9); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .screen-shake-hard {
+            animation: aggressive-shake 0.4s ease-out; 
+        }
+
+    </style>
+</head>
+<body id="mainBody" class="h-screen w-full flex flex-col items-center justify-center relative overflow-hidden text-red-500 selection:bg-red-900 selection:text-white">
+
+    <!-- Background Elements -->
+    <div class="bg-grid" id="grid"></div>
+    <canvas id="particleCanvas" class="absolute inset-0 w-full h-full pointer-events-none z-40"></canvas>
+
+    <!-- Flash Overlay (Red Flash) -->
+    <div id="flashOverlay" class="fixed inset-0 bg-red-600 z-[100] pointer-events-none opacity-0 mix-blend-plus-lighter"></div>
+
+    <!-- Hacked Splash Screen -->
+    <div id="splashScreen" class="fixed inset-0 z-[90] flex flex-col items-center justify-center opacity-0 pointer-events-none transition-opacity duration-200">
+        
+        <!-- Skull Icon -->
+        <svg class="w-48 h-48 text-red-600 mb-8 slam-text drop-shadow-[0_0_35px_rgba(220,38,38,0.8)]" fill="currentColor" viewBox="0 0 24 24" style="animation-delay: 0.1s;">
+            <path d="M12 2C7.58 2 4 5.58 4 10v2h2v-2c0-3.31 2.69-6 6-6s6 2.69 6 6v2h2v-2c0-4.42-3.58-8-8-8zm0 10c-3.31 0-6 2.69-6 6v2h12v-2c0-3.31-2.69-6-6-6zm-3 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1zm6 0c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"></path>
+        </svg>
+
+        <div class="relative slam-text" style="animation-delay: 0.2s;">
+            <h1 class="relative text-7xl md:text-9xl font-black text-white tracking-tighter mb-4 tech-font text-center leading-none glitch-active">
+                SYSTEM<br><span class="text-red-600">HACKED</span>
+            </h1>
+        </div>
+        
+        <div class="flex items-center gap-6 mt-8 mb-16 slam-text" style="animation-delay: 0.4s;">
+            <div class="h-[2px] w-24 bg-red-600"></div>
+            <p class="text-red-500 font-mono text-2xl tracking-[0.3em] uppercase font-bold text-center">ROOT ACCESS GRANTED</p>
+            <div class="h-[2px] w-24 bg-red-600"></div>
+        </div>
+        
+        <button id="resetBtn" class="group relative px-12 py-4 bg-red-950/30 overflow-hidden rounded border border-red-600 transition-all hover:bg-red-600 slam-text cursor-pointer" style="animation-delay: 0.6s;">
+            <span class="relative text-red-500 group-hover:text-black tracking-widest text-lg font-bold font-mono uppercase transition-colors">
+                INITIATE SYSTEM RESET
+            </span>
+        </button>
+    </div>
+
+    <!-- Main Card -->
+    <!-- Increased size: max-w-lg and p-14 -->
+    <div id="mainCard" class="relative z-50 p-14 bg-[#0a0000]/95 backdrop-blur-2xl border border-red-900/40 rounded-2xl shadow-[0_0_80px_rgba(150,0,0,0.15)] flex flex-col items-center max-w-2xl w-full ring-1 ring-red-900/30 transition-transform duration-100">
+        
+        <!-- Header Section -->
+        <div class="w-full mb-10">
+            <div class="flex justify-between items-end mb-4 border-b border-red-900/30 pb-2">
+                <div class="flex flex-col">
+                    <span class="text-xs text-red-700 font-mono tracking-widest mb-1">TARGET SYSTEM</span>
+                    <span class="text-xl text-red-500 font-bold tech-font tracking-wide">MAINFRAME_ALPHA</span>
+                </div>
+                <div class="flex flex-col items-end">
+                    <span class="text-xs text-red-700 font-mono tracking-widest mb-1">STATUS</span>
+                    <span class="text-green-500 font-bold tracking-widest" id="firewallStatusText">SECURE</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Firewall Visualizer (Larger) -->
+        <div class="w-full mb-12">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-[10px] tracking-[0.2em] text-red-800">FIREWALL INTEGRITY</span>
+                <span class="text-[10px] tracking-[0.2em] text-red-800" id="integrityPct">100%</span>
+            </div>
+            <div class="firewall-container" id="firewallContainer">
+                <div class="firewall-node" id="fw-1"></div>
+                <div class="firewall-node" id="fw-2"></div>
+                <div class="firewall-node" id="fw-3"></div>
+                <div class="firewall-node" id="fw-4"></div>
+                <div class="firewall-node" id="fw-5"></div>
+            </div>
+        </div>
+
+        <!-- The Interactive Button Container (Larger) -->
+        <div id="btnContainer" class="btn-container w-[320px] h-[72px] flex items-center justify-center relative">
+            
+            <!-- The Orb (Visual only) -->
+            <div class="loader-orb" id="orb"></div>
+
+            <!-- The Button Itself -->
+            <button id="downloadBtn" class="download-btn w-full h-full rounded-md flex items-center justify-center gap-4 text-white font-bold tracking-widest cursor-pointer group uppercase text-lg z-20">
+                
+                <!-- Initial Content -->
+                <div class="text-content flex items-center gap-4 transition-all duration-300 group-hover:tracking-[0.25em] whitespace-nowrap">
+                    <svg class="w-6 h-6 text-red-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                    <span>EXECUTE DIAGNOSTIC</span>
+                </div>
+
+                <!-- Hacked Content -->
+                <div class="success-content hidden flex items-center gap-3 animate-[fadeIn_0.5s_ease-out]">
+                    <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <span class="text-red-500 font-bold glitch-active text-xl">SYSTEM CRITICAL</span>
+                </div>
+            </button>
+
+            <!-- Progress Percentage -->
+            <div id="progressText" class="progress-text tech-font">0<small>%</small></div>
+        </div>
+
+        <!-- Footer Console -->
+        <div class="mt-8 text-center">
+            <p class="text-red-900/60 font-mono text-xs tracking-widest mb-1">CONSOLE OUTPUT</p>
+            <p id="consoleText" class="text-red-500 font-mono text-sm h-6">WAITING FOR COMMAND...</p>
+        </div>
+
+    </div>
+
+    <script>
+        // DOM Elements
+        const body = document.getElementById('mainBody');
+        const card = document.getElementById('mainCard');
+        const btnContainer = document.getElementById('btnContainer');
+        const btn = document.getElementById('downloadBtn');
+        const textContent = btn.querySelector('.text-content');
+        const successContent = btn.querySelector('.success-content');
+        const progressText = document.getElementById('progressText');
+        const orb = document.getElementById('orb');
+        const consoleText = document.getElementById('consoleText');
+        const firewallStatusText = document.getElementById('firewallStatusText');
+        const integrityPct = document.getElementById('integrityPct');
+        const canvas = document.getElementById('particleCanvas');
+        const resetBtn = document.getElementById('resetBtn');
+        const flashOverlay = document.getElementById('flashOverlay');
+        const splashScreen = document.getElementById('splashScreen');
+        const ctx = canvas.getContext('2d');
+        
+        // Firewall Nodes
+        const firewalls = [
+            document.getElementById('fw-1'),
+            document.getElementById('fw-2'),
+            document.getElementById('fw-3'),
+            document.getElementById('fw-4'),
+            document.getElementById('fw-5')
+        ];
+
+        // State
+        let isDownloading = false;
+        let particles = [];
+        let shockwaves = [];
+        let animationId;
+        let progress = 0;
+        let width, height;
+        let shakeIntensity = 0;
+        let currentLayerIndex = 0;
+
+        // Resize
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function getBtnCenter() {
+            const rect = btnContainer.getBoundingClientRect();
+            return {
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2
+            };
+        }
+
+        // --- Glitch Text Utility ---
+        const glitchChars = '!@#$%^&*()_+-=[]{}|;:,.<>?/1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        function glitchText(element, originalText) {
+            let iterations = 0;
+            const interval = setInterval(() => {
+                element.innerText = originalText.split('')
+                    .map((char, index) => {
+                        if(index < iterations) return originalText[index];
+                        return glitchChars[Math.floor(Math.random() * glitchChars.length)];
+                    })
+                    .join('');
+                
+                if(iterations >= originalText.length) clearInterval(interval);
+                iterations += 1/2; // Faster glitch
+            }, 30);
+        }
+
+        // --- Visual Classes ---
+
+        class Shockwave {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.radius = 20;
+                this.maxRadius = Math.max(width, height) * 1.2;
+                this.color = color;
+                this.opacity = 0.8;
+                this.width = 10;
+                this.speed = 40;
+            }
+
+            update() {
+                this.radius += this.speed;
+                this.opacity -= 0.03;
+                this.width *= 0.95;
+                this.speed *= 0.95;
+            }
+
+            draw() {
+                if(this.opacity <= 0) return;
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(239, 68, 68, ${this.opacity})`;
+                ctx.lineWidth = this.width;
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        class Particle {
+            constructor(type = 'in') {
+                this.reset(type);
+            }
+
+            reset(type) {
+                const center = getBtnCenter();
+                this.type = type; 
+                
+                if (type === 'in') {
+                    this.angle = Math.random() * Math.PI * 2;
+                    this.dist = Math.random() * 500 + 150; // Much wider spawn for larger UI
+                    this.x = center.x + Math.cos(this.angle) * this.dist;
+                    this.y = center.y + Math.sin(this.angle) * this.dist;
+                    this.tangentSpeed = 0.02 + Math.random() * 0.04;
+                    this.inwardSpeed = 8 + Math.random() * 8; // Faster
+                    this.size = Math.random() * 4 + 2; // Larger particles
+                    
+                    const r = 200 + Math.random() * 55;
+                    this.color = `rgb(${r}, 0, 0)`;
+                } else {
+                    // Explosion
+                    this.x = center.x;
+                    this.y = center.y;
+                    const a = Math.random() * Math.PI * 2;
+                    const v = Math.random() * 30 + 10;
+                    this.vx = Math.cos(a) * v;
+                    this.vy = Math.sin(a) * v;
+                    this.life = 1;
+                    this.decay = Math.random() * 0.02 + 0.01;
+                    this.color = '#ef4444';
+                    this.size = Math.random() * 6 + 2;
+                }
+            }
+
+            update(center, progressRatio) {
+                if (this.type === 'in') {
+                    let suctionMultiplier = 1;
+                    // Scale intensity with firewall breach
+                    suctionMultiplier += (currentLayerIndex * 0.8); 
+                    
+                    if(progressRatio > 0.9) suctionMultiplier = 6;
+
+                    this.angle += this.tangentSpeed * (1 + progressRatio * 2) * suctionMultiplier; 
+                    this.dist -= this.inwardSpeed * (1 + progressRatio * 3) * suctionMultiplier; 
+
+                    this.x = center.x + Math.cos(this.angle) * this.dist;
+                    this.y = center.y + Math.sin(this.angle) * this.dist;
+
+                    if (this.dist < 60) this.color = '#fff';
+
+                    if (this.dist < 15) this.reset('in');
+                } else {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vx *= 0.92;
+                    this.vy *= 0.92;
+                    this.life -= this.decay;
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.life !== undefined ? this.life : 1;
+                
+                if(this.type === 'in') {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Trail
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
+                    const prevX = this.x - Math.cos(this.angle + Math.PI/2) * 15;
+                    const prevY = this.y - Math.sin(this.angle + Math.PI/2) * 15;
+                    ctx.strokeStyle = `rgba(239, 68, 68, 0.4)`;
+                    ctx.lineWidth = this.size / 2;
+                    ctx.lineTo(prevX, prevY);
+                    ctx.stroke();
+
+                } else {
+                    ctx.beginPath();
+                    ctx.rect(this.x, this.y, this.size, this.size); 
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        // --- Controller ---
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            const center = getBtnCenter();
+            const ratio = progress / 100;
+
+            if(isDownloading && progress < 100) {
+                particles.forEach(p => {
+                    p.update(center, ratio);
+                    p.draw();
+                });
+                
+                // Density scales with UI size and intensity
+                if(particles.length < 80 + (currentLayerIndex * 50)) {
+                    particles.push(new Particle('in'));
+                }
+            } else if (!isDownloading) {
+                 for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    if (p.life !== undefined && p.life <= 0) {
+                        particles.splice(i, 1);
+                    } else {
+                        p.update(center, 0); 
+                        p.draw();
+                    }
+                }
+            }
+
+            shockwaves.forEach((s, i) => {
+                if(s.opacity <= 0) shockwaves.splice(i, 1);
+                else {
+                    s.update();
+                    s.draw();
+                }
+            });
+
+            if(shakeIntensity > 0) {
+                const x = (Math.random() - 0.5) * shakeIntensity;
+                const y = (Math.random() - 0.5) * shakeIntensity;
+                card.style.transform = `translate(${x}px, ${y}px)`;
+                shakeIntensity *= 0.9; 
+                if(shakeIntensity < 0.5) shakeIntensity = 0;
+            } else {
+                card.style.transform = 'translate(0,0)';
+            }
+
+            requestAnimationFrame(animate);
+        }
+        
+        requestAnimationFrame(animate); 
+
+        // --- Interaction ---
+
+        btn.addEventListener('click', () => {
+            if(isDownloading) return;
+            if(btnContainer.classList.contains('success')) return;
+            start();
+        });
+
+        resetBtn.addEventListener('click', reset);
+
+        function start() {
+            isDownloading = true;
+            progress = 0;
+            currentLayerIndex = 0;
+            particles = [];
+            
+            btnContainer.classList.add('morphing', 'loading');
+            consoleText.innerText = "INITIATING BRUTE FORCE...";
+            
+            setTimeout(() => {
+                progressText.classList.add('visible');
+                // First firewall active
+                firewalls[0].classList.add('active-attack');
+            }, 400);
+
+            const interval = setInterval(() => {
+                
+                // Logic: 5 Layers = 20% each
+                let calculatedLayer = Math.floor(progress / 20); 
+                
+                // Integrity Countdown
+                let integrity = Math.max(0, 100 - Math.floor(progress));
+                integrityPct.innerText = integrity + "%";
+                integrityPct.className = "text-[10px] tracking-[0.2em] " + (integrity < 30 ? "text-red-600 font-bold" : "text-red-800");
+
+                // New Breach Event
+                if (calculatedLayer > currentLayerIndex && calculatedLayer <= 5) {
+                    
+                    // Shatter previous layer
+                    const layerToBreach = firewalls[currentLayerIndex]; 
+                    if(layerToBreach) {
+                        layerToBreach.classList.remove('active-attack');
+                        layerToBreach.classList.add('breached');
+                        
+                        // FX
+                        shockwaves.push(new Shockwave(getBtnCenter().x, getBtnCenter().y, '#ef4444'));
+                        shakeIntensity = 8; // Heavy shake
+                        
+                        // Update Status
+                        firewallStatusText.innerText = "WARNING";
+                        firewallStatusText.className = "text-yellow-500 font-bold blink";
+                        consoleText.innerText = `BYPASSING LAYER 0${calculatedLayer}... SUCCESS`;
+                    }
+
+                    // Attack next layer
+                    if(calculatedLayer < 5) {
+                        firewalls[calculatedLayer].classList.add('active-attack');
+                        setTimeout(() => {
+                            consoleText.innerText = `ATTACKING LAYER 0${calculatedLayer+1}...`;
+                        }, 200);
+                    }
+                    
+                    currentLayerIndex = calculatedLayer;
+                }
+
+                // Speed curve
+                let speed = 0.4;
+                if(currentLayerIndex >= 1) speed = 0.6;
+                if(currentLayerIndex >= 2) speed = 1.0;
+                if(currentLayerIndex >= 3) {
+                    speed = 1.5;
+                    shakeIntensity = Math.max(shakeIntensity, 3); // Constant rattle
+                    btnContainer.classList.add('shaking');
+                }
+                if(currentLayerIndex >= 4) {
+                    speed = 0.3; // Dramatic slowdown at end
+                    consoleText.innerText = "OVERRIDING KERNEL...";
+                    firewallStatusText.innerText = "CRITICAL";
+                    firewallStatusText.className = "text-red-600 font-black blink";
+                }
+                
+                progress += speed + (Math.random() * 0.5);
+                
+                if(progress > 100) progress = 100;
+
+                if(progressText.innerText !== "ERR") {
+                    progressText.innerHTML = Math.floor(progress) + '<small>%</small>';
+                }
+
+                if(progress >= 100) {
+                    clearInterval(interval);
+                    complete();
+                }
+
+            }, 40);
+        }
+
+        function complete() {
+            // Shatter final node
+            if(firewalls[4]) {
+                 firewalls[4].classList.remove('active-attack');
+                 firewalls[4].classList.add('breached');
+            }
+            
+            firewallStatusText.innerText = "FAILED";
+            integrityPct.innerText = "0%";
+            consoleText.innerText = "ACCESS GRANTED.";
+
+            // FLASH!
+            flashOverlay.style.transition = 'opacity 50ms ease-out';
+            flashOverlay.style.opacity = '1';
+
+            setTimeout(() => {
+                isDownloading = false;
+                particles = []; 
+
+                // UI Final State
+                btnContainer.classList.remove('morphing', 'loading', 'shaking');
+                btnContainer.classList.add('success');
+                progressText.classList.remove('visible');
+                
+                textContent.classList.add('hidden');
+                successContent.classList.remove('hidden');
+                
+                // FX
+                for(let i=0; i<300; i++) particles.push(new Particle('out'));
+                shockwaves.push(new Shockwave(getBtnCenter().x, getBtnCenter().y, '#ef4444'));
+                
+                // Hard Shake
+                body.classList.add('screen-shake-hard');
+                setTimeout(() => body.classList.remove('screen-shake-hard'), 400);
+
+                // Show Splash
+                splashScreen.classList.remove('opacity-0', 'pointer-events-none');
+                splashScreen.classList.add('slam-active');
+
+                body.style.backgroundColor = "#200000";
+
+                flashOverlay.style.transition = 'opacity 2s ease-out';
+                flashOverlay.style.opacity = '0';
+
+            }, 100);
+        }
+
+        function reset() {
+            splashScreen.classList.add('opacity-0', 'pointer-events-none');
+            splashScreen.classList.remove('slam-active');
+
+            btnContainer.classList.remove('success');
+            successContent.classList.add('hidden');
+            textContent.classList.remove('hidden');
+            
+            // Reset Firewalls
+            firewalls.forEach(fw => {
+                fw.classList.remove('breached', 'active-attack');
+            });
+            currentLayerIndex = 0;
+            
+            firewallStatusText.innerText = "SECURE";
+            firewallStatusText.className = "text-green-500 font-bold tracking-widest";
+            integrityPct.innerText = "100%";
+            integrityPct.className = "text-[10px] tracking-[0.2em] text-red-800";
+            consoleText.innerText = "WAITING FOR COMMAND...";
+            
+            body.style.backgroundColor = "#020000";
+            progressText.innerHTML = '0<small>%</small>';
+        }
+
+    </script>
+</body>
+</html>
